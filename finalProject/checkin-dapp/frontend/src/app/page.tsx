@@ -3,7 +3,8 @@ import { CartoonButton } from "@/components/ui/CartoonButton";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-dots relative overflow-hidden">
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden">
+      <div className="absolute inset-0 bg-dots pointer-events-none" />
       <div className="z-10 flex flex-col items-center gap-8 max-w-2xl text-center">
         <div className="text-6xl animate-bounce">📅</div>
         <h1 className="text-4xl md:text-6xl font-black text-brand-dark tracking-tight">

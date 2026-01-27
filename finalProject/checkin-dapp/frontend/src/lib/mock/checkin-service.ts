@@ -15,6 +15,13 @@ export interface Badge {
   claimed: boolean;
 }
 
+export interface CheckInService {
+  getStats(address: string): Promise<CheckInStats>;
+  checkIn(address: string): Promise<boolean>;
+  getHistory(address: string): Promise<{ date: string; checked: boolean }[]>;
+  getBadges(address: string): Promise<Badge[]>;
+}
+
 const STORAGE_KEY_PREFIX = "checkin_dapp_";
 const BADGE_THRESHOLDS = [
   { id: "badge_1", name: "初出茅庐", description: "累计打卡 7 天", threshold: 7, emoji: "🌱" },
@@ -22,7 +29,7 @@ const BADGE_THRESHOLDS = [
   { id: "badge_3", name: "打卡大师", description: "累计打卡 30 天", threshold: 30, emoji: "🏆" },
 ];
 
-export class MockCheckInService {
+export class MockCheckInService implements CheckInService {
   private getStorageKey(address: string) {
     return `${STORAGE_KEY_PREFIX}${address}`;
   }

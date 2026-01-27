@@ -1,0 +1,65 @@
+{
+  "address": "B5Zjd3jeSG45nRbbBJqAttHm7aVBFERuGXJv9Pm4WXpd",
+  "metadata": { "name": "program", "version": "0.1.0", "spec": "0.1.0" },
+  "version": "0.1.0",
+  "name": "program",
+  "instructions": [
+    {
+      "name": "initialize_user",
+      "discriminator": [111, 17, 185, 250, 60, 122, 38, 254],
+      "accounts": [
+        { "name": "authority", "isMut": true, "isSigner": true },
+        { "name": "user_checkin", "isMut": true, "isSigner": false },
+        { "name": "system_program", "isMut": false, "isSigner": false }
+      ],
+      "args": []
+    },
+    {
+      "name": "check_in",
+      "discriminator": [209, 253, 4, 217, 250, 241, 207, 50],
+      "accounts": [
+        { "name": "authority", "isMut": true, "isSigner": true },
+        { "name": "user_checkin", "isMut": true, "isSigner": false }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "UserCheckin",
+      "discriminator": [189, 127, 89, 157, 162, 26, 18, 243],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "authority", "type": "pubkey" },
+          { "name": "total_checkins", "type": "u32" },
+          { "name": "last_checkin_day", "type": "i64" },
+          { "name": "streak", "type": "u16" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "UserCheckin",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "authority", "type": "pubkey" },
+          { "name": "total_checkins", "type": "u32" },
+          { "name": "last_checkin_day", "type": "i64" },
+          { "name": "streak", "type": "u16" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AlreadyCheckedInToday",
+      "msg": "今天已经打过卡啦！明天再来吧~"
+    }
+  ]
+}
