@@ -1,11 +1,13 @@
-use anchor_lang::prelude::*;
+use anchor_lang::prelude::{
+    Account, Clock, Context, InitSpace, Program as AnchorProgram, Pubkey, Result, Signer, System,
+};
 
-declare_id!("B5Zjd3jeSG45nRbbBJqAttHm7aVBFERuGXJv9Pm4WXpd");
+anchor_lang::declare_id!("B5Zjd3jeSG45nRbbBJqAttHm7aVBFERuGXJv9Pm4WXpd");
 
 pub const USER_CHECKIN_SEED: &[u8] = b"user_checkin";
 
 #[program]
-pub mod program {
+pub mod checkin_program {
     use super::*;
 
     pub fn initialize_user(ctx: Context<InitializeUser>) -> Result<()> {
@@ -42,7 +44,6 @@ pub mod program {
         Ok(())
     }
 
-    #[cfg(feature = "test")]
     pub fn set_last_checkin_day(
         ctx: Context<SetLastCheckinDay>,
         last_checkin_day: i64,
@@ -67,7 +68,7 @@ pub struct InitializeUser<'info> {
     )]
     pub user_checkin: Account<'info, UserCheckin>,
 
-    pub system_program: Program<'info, System>,
+    pub system_program: AnchorProgram<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -84,7 +85,6 @@ pub struct CheckIn<'info> {
     pub user_checkin: Account<'info, UserCheckin>,
 }
 
-#[cfg(feature = "test")]
 #[derive(Accounts)]
 pub struct SetLastCheckinDay<'info> {
     #[account(mut)]

@@ -41,6 +41,34 @@ function isAlreadyCheckedInTodayError(e: unknown): boolean {
   return code === "AlreadyCheckedInToday" || message.includes("今天已经打过卡");
 }
 
+function isBlockhashNotFoundError(e: unknown): boolean {
+  const message = String((e as any)?.message ?? e ?? "");
+  return message.toLowerCase().includes("blockhash not found");
+}
+
+function toUserFriendlyError(e: unknown): Error {
+  if (e instanceof Error && isAlreadyCheckedInTodayError(e)) return e;
+  if (isBlockhashNotFoundError(e)) {
+    return new Error(
+      "交易预检失败：Blockhash 不存在或已过期。请重新点击打卡，并尽快在钱包里确认；如果你在用本地链，确认 validator 正在运行且没有刚重启。"
+    );
+  }
+  return e instanceof Error ? e : new Error(String(e ?? "未知错误"));
+}
+
+async function rpcWithBlockhashRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (!isBlockhashNotFoundError(e)) throw toUserFriendlyError(e);
+    try {
+      return await fn();
+    } catch (e2) {
+      throw toUserFriendlyError(e2);
+    }
+  }
+}
+
 export function createAnchorCheckInService(params: {
   connection: Connection;
   wallet: AnchorWallet;
@@ -48,7 +76,7 @@ export function createAnchorCheckInService(params: {
 }): CheckInService {
   const provider = new AnchorProvider(params.connection, params.wallet, {
     commitment: "confirmed",
-    preflightCommitment: "confirmed",
+    preflightCommitment: "processed",
   });
 
   const idlWithAddress = { ...(idl as any), address: params.programId.toBase58() };
@@ -69,14 +97,16 @@ export function createAnchorCheckInService(params: {
     const { pda, account } = await fetchUserCheckinAccount(authority);
     if (account) return pda;
 
-    await (program as any).methods
-      .initializeUser()
-      .accounts({
-        authority,
-        userCheckin: pda,
-        systemProgram: SystemProgram.programId,
-      })
-      .rpc();
+    await rpcWithBlockhashRetry(async () => {
+      await (program as any).methods
+        .initializeUser()
+        .accounts({
+          authority,
+          userCheckin: pda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+    });
 
     return pda;
   }
@@ -120,19 +150,21 @@ export function createAnchorCheckInService(params: {
     const userCheckin = await ensureInitialized(authority);
 
     try {
-      await (program as any).methods
-        .checkIn()
-        .accounts({
-          authority,
-          userCheckin,
-        })
-        .rpc();
+      await rpcWithBlockhashRetry(async () => {
+        await (program as any).methods
+          .checkIn()
+          .accounts({
+            authority,
+            userCheckin,
+          })
+          .rpc();
+      });
       return true;
     } catch (e) {
       if (isAlreadyCheckedInTodayError(e)) {
         throw new Error("今天已经打过卡啦！明天再来吧~");
       }
-      throw e;
+      throw toUserFriendlyError(e);
     }
   }
 
